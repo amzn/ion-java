@@ -241,14 +241,18 @@ public class RoundTripTest
 
         // Reload the first-trip binary
 
-        IonDatagram dgFromBinary = loader.load(binary1);
+        IonReader reader = getStreamingMode().newIonReader(system().getCatalog(), binary1);
+        IonDatagram dgFromBinary = loader.load(reader);
+        reader.close();
 
         String text2FromBinary   = renderUserView(dgFromBinary);
         byte[] binary2FromBinary = encode(dgFromBinary);
         checkBinaryHeader(binary2FromBinary);
 
         // check strict data equivalence
-        IonDatagram dgbinary2FromBinary = loader.load(binary2FromBinary);
+        reader = getStreamingMode().newIonReader(system().getCatalog(), binary2FromBinary);
+        IonDatagram dgbinary2FromBinary = loader.load(reader);
+        reader.close();
         assertIonEquals(dgFromBinary, dgbinary2FromBinary);
 
         if (!compareRenderedTextImages(text2FromText, text2FromBinary))
@@ -259,7 +263,9 @@ public class RoundTripTest
         }
 
         // check strict data equivalence
-        IonDatagram dgBinary2FromText = loader.load(binary2FromText);
+        reader = getStreamingMode().newIonReader(system().getCatalog(), binary2FromText);
+        IonDatagram dgBinary2FromText = loader.load(reader);
+        reader.close();
         assertIonEquals(dgFromBinary, dgBinary2FromText);
     }
 

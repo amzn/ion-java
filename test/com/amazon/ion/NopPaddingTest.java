@@ -126,8 +126,6 @@ public class NopPaddingTest
         throws Exception
     {
         myExpectedException.expect(IonException.class);
-        myExpectedException.expectMessage("NOP padding is not allowed within annotation wrappers.");
-
         loadTestFile("bad/nopPadWithAnnotations.10n");
     }
 

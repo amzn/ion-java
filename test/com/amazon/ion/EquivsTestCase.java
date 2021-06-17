@@ -15,17 +15,27 @@
 
 package com.amazon.ion;
 
+import static com.amazon.ion.IonType.DATAGRAM;
+
 import com.amazon.ion.impl._Private_Utils;
 import com.amazon.ion.junit.IonAssert;
+
+import java.io.Closeable;
+import java.io.File;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import com.amazon.ion.system.IonBinaryWriterBuilder;
 import com.amazon.ion.system.IonSystemBuilder;
 import com.amazon.ion.system.IonTextWriterBuilder;
-import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.amazon.ion.IonType.DATAGRAM;
 
@@ -57,9 +67,23 @@ public abstract class EquivsTestCase
 
     private File myTestFile;
 
+    private List<Closeable> resourcesToClose = new ArrayList<Closeable>(1);
+
     public void setTestFile(File file)
     {
         myTestFile = file;
+    }
+
+    @Before
+    public void resetResources() {
+        resourcesToClose.clear();
+    }
+
+    @After
+    public void closeResources() throws IOException {
+        for (Closeable resource : resourcesToClose) {
+            resource.close();
+        }
     }
 
     public EquivsTestCase(boolean expectedEquality)
@@ -191,7 +215,7 @@ public abstract class EquivsTestCase
         }
     }
 
-    protected static IonDatagram[] roundTripDatagram(IonDatagram input) throws IOException {
+    public IonDatagram[] roundTripDatagram(IonDatagram input) throws IOException {
         IonSystem system = IonSystemBuilder.standard().build();
         IonLoader loader = system.getLoader();
         ByteArrayOutputStream textOutputStream = new ByteArrayOutputStream();
@@ -215,7 +239,12 @@ public abstract class EquivsTestCase
         }
         data[0] = input;
         data[1] = loader.load(new ByteArrayInputStream(textOutputStream.toByteArray()));
-        data[2] = loader.load(new ByteArrayInputStream(binaryOutputStream.toByteArray()));
+        binaryReader = getStreamingMode().newIonReader(
+            system().getCatalog(),
+            new ByteArrayInputStream(binaryOutputStream.toByteArray())
+        );
+        resourcesToClose.add(binaryReader);
+        data[2] = loader.load(binaryReader);
         return data;
     }
 
@@ -231,7 +260,9 @@ public abstract class EquivsTestCase
     public void testEquivsOverFile()
     throws Exception
     {
-        IonDatagram dg = loader().load(myTestFile);
+        IonReader reader = getStreamingMode().newIonReader(system().getCatalog(), new FileInputStream(myTestFile));
+        IonDatagram dg = loader().load(reader);
+        reader.close();
         runEquivalenceChecks(dg, myExpectedEquality);
         roundTripEquivalence(dg, myExpectedEquality);
     }

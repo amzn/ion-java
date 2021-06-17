@@ -158,7 +158,10 @@ public class ReaderChecker
             }
 
             try {
-                myReader.iterateTypeAnnotations();
+                Iterator<String> iterator = myReader.iterateTypeAnnotations();
+                while (iterator.hasNext()) {
+                    iterator.next();
+                }
                 fail("Expected " + UnknownSymbolException.class);
             }
             catch (UnknownSymbolException e)

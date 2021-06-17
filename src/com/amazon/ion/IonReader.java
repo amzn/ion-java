@@ -226,7 +226,11 @@ public interface IonReader
      * iterator is empty (hasNext() returns false on the first call) if
      * there are no annotations on the current value.
      *
-     * @throws UnknownSymbolException if any annotation has unknown text.
+     * Implementations *may* throw {@link UnknownSymbolException} from
+     * this method if any annotation contains unknown text. Alternatively,
+     * implementations may provide an Iterator that throws
+     * {@link UnknownSymbolException} only when the user navigates the
+     * iterator to an annotation with unknown text.
      *
      * @return not null.
      */

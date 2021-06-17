@@ -30,7 +30,6 @@ import org.junit.rules.ExpectedException;
  * Tests basic behavior of the {@link RawValueSpanProvider} reader facet, which
  * provides access to the reader's underlying byte buffer and vends OffsetSpans
  * that provide positions of the current value in that buffer.
- * @see RawValueSpanReaderTest
  */
 @SuppressWarnings({"deprecation", "javadoc"})
 public class RawValueSpanReaderBasicTest
@@ -51,6 +50,14 @@ public class RawValueSpanReaderBasicTest
         // Only the binary reader currently provides this facet.
         IonReader reader = IonReaderBuilder.standard().build("text");
         assertNull(reader.asFacet(RawValueSpanProvider.class));
+    }
+
+    @Test
+    public void incrementalBinaryReaderReturnsNullFacet()
+    {
+        IonReader reader = IonReaderBuilder.standard().withIncrementalReadingEnabled(true).build(dummyData);
+        assertNull(reader.asFacet(RawValueSpanProvider.class));
+        assertNull(reader.asFacet(SeekableReader.class));
     }
 
     @Test

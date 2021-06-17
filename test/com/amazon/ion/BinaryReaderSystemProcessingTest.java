@@ -38,7 +38,7 @@ public class BinaryReaderSystemProcessingTest
     @Override
     public IonReader read() throws Exception
     {
-        return system().newReader(myBytes);
+        return getStreamingMode().newIonReader(system().getCatalog(), myBytes);
     }
 
     @Override

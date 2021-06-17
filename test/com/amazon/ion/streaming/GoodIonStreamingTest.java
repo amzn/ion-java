@@ -58,9 +58,11 @@ extends IonTestCase
     {
         byte[] buf = _Private_Utils.loadFileBytes(myTestFile);
 
-        IonReader reader = system().newReader(buf);
+        IonReader reader = getStreamingMode().newIonReader(system().getCatalog(), buf);
         TestUtils.deepRead(reader);
-        IonReader reader2 = system().newReader(buf);
+        reader.close();
+        IonReader reader2 = getStreamingMode().newIonReader(system().getCatalog(), buf);
         TestUtils.deepRead(reader2, false);
+        reader2.close();
     }
 }

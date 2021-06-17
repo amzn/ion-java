@@ -62,7 +62,7 @@ public class GoodIonTest
 
         FileInputStream in = new FileInputStream(myTestFile);
         try {
-            IonReader fileReader = system().newReader(in);
+            IonReader fileReader = getStreamingMode().newIonReader(system().getCatalog(), in);
 
             ReaderCompare.compare(treeReader, fileReader);
         }
@@ -71,7 +71,7 @@ public class GoodIonTest
         }
 
 
-        // Pass 3: Use Iterator
+        // Pass 3: Use Iterator over InputStream
         in = new FileInputStream(myTestFile);
         try {
             Iterator<IonValue> expected = datagram.iterator();
@@ -83,9 +83,21 @@ public class GoodIonTest
             in.close();
         }
 
+        // Pass 4: Use Iterator over IonReader
+        in = new FileInputStream(myTestFile);
+        try {
+            Iterator<IonValue> expected = datagram.iterator();
+            Iterator<IonValue> actual = system().iterate(getStreamingMode().newIonReader(system().getCatalog(), in));
+
+            assertIonIteratorEquals(expected, actual);
+        }
+        finally {
+            in.close();
+        }
+
         treeReader = system().newReader(datagram);
         byte[] encoded = datagram.getBytes();
-        IonReader binaryReader = system().newReader(encoded);
+        IonReader binaryReader = getStreamingMode().newIonReader(system().getCatalog(), encoded);
         ReaderCompare.compare(treeReader, binaryReader);
     }
 

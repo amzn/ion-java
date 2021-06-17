@@ -19,6 +19,8 @@ import static com.amazon.ion.TestUtils.ensureBinary;
 import static com.amazon.ion.TestUtils.ensureText;
 
 import com.amazon.ion.impl._Private_Utils;
+import com.amazon.ion.system.IonReaderBuilder;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -138,6 +140,33 @@ public enum ReaderMaker
         }
     },
 
+    FROM_INPUT_STREAM_BINARY_INCREMENTAL(Feature.BINARY, Feature.STREAM)
+    {
+        @Override
+        public IonReader newReader(IonSystem system, byte[] ionData,
+                                   InputStreamWrapper wrapper)
+            throws IOException
+        {
+            ionData = ensureBinary(system, ionData);
+            InputStream in = new ByteArrayInputStream(ionData);
+            InputStream wrapped = wrapper.wrap(in);
+            return newReader(system, wrapped);
+        }
+
+        @Override
+        public IonReader newReader(IonSystem system, byte[] ionData)
+        {
+            ionData = ensureBinary(system, ionData);
+            InputStream in = new ByteArrayInputStream(ionData);
+            return newReader(system, in);
+        }
+
+        @Override
+        public IonReader newReader(IonSystem system, InputStream inputStream) {
+            IonCatalog catalog = system.getCatalog();
+            return IonReaderBuilder.standard().withIncrementalReadingEnabled(true).withCatalog(catalog).build(inputStream);
+        }
+    },
 
     /**
      * Invokes {@link IonSystem#newReader(InputStream)} with Ion text.

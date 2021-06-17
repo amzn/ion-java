@@ -19,6 +19,7 @@ import static com.amazon.ion.impl.UnifiedInputStreamX.makeStream;
 import static com.amazon.ion.impl._Private_IonConstants.BINARY_VERSION_MARKER_SIZE;
 import static com.amazon.ion.util.IonStreamUtils.isIonBinary;
 
+import com.amazon.ion.IonBufferConfiguration;
 import com.amazon.ion.IonCatalog;
 import com.amazon.ion.IonException;
 import com.amazon.ion.IonReader;
@@ -251,6 +252,13 @@ public final class _Private_IonReaderFactory
             throw new IonException("you can't mix values from different systems");
         }
         return new IonReaderTreeSystem(value);
+    }
+
+    public static final IonReader makeIncrementalReader(IonCatalog catalog,
+                                                        InputStream is,
+                                                        IonBufferConfiguration configuration)
+    {
+        return new IonReaderBinaryIncremental(is, catalog, configuration);
     }
 
 

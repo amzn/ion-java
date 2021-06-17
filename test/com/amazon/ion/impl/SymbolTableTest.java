@@ -973,9 +973,9 @@ public class SymbolTableTest
         IonSystem system = system();
         SymbolTable st = ((_Private_ValueFactory)system).getLstFactory().newLocalSymtab(system.getSystemSymbolTable());
         st.intern("foo");
-        IonStruct image = symtabTree(st);
+        IonStruct image = symtabTree(st, system);
         st.intern("bar");
-        image = symtabTree(st);
+        image = symtabTree(st, system);
         IonList symbols = (IonList) image.get(SYMBOLS);
         assertEquals("[\"foo\",\"bar\"]", symbols.toString());
     }

@@ -138,6 +138,7 @@ public class TestUtils
                       "bad/clobWithNullCharacter.ion"          // TODO amzn/ion-java/43
                       ,"bad/emptyAnnotatedInt.10n"             // TODO amzn/ion-java/55
                       ,"good/subfieldVarUInt32bit.ion"         // TODO amzn/ion-java/62
+                      ,"good/subfieldVarUInt.ion"              // Note: this passes but takes too long. That's fine; it's not a realistic use case.
                       ,"good/utf16.ion"                        // TODO amzn/ion-java/61
                       ,"good/utf32.ion"                        // TODO amzn/ion-java/61
                       ,"good/whitespace.ion"

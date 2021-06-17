@@ -15,8 +15,6 @@
 
 package com.amazon.ion.impl;
 
-import static com.amazon.ion.util.IonTextUtils.printString;
-
 import com.amazon.ion.SymbolToken;
 import com.amazon.ion.UnknownSymbolException;
 
@@ -76,18 +74,18 @@ final class SymbolTokenImpl
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || !(o instanceof SymbolToken)) return false;
 
-        SymbolTokenImpl other = (SymbolTokenImpl) o;
-        if(myText == null || other.myText == null){
-            return myText == other.myText;
+        SymbolToken other = (SymbolToken) o;
+        if(getText() == null || other.getText() == null){
+            return getText() == other.getText();
         }
-        return myText.equals(other.myText);
+        return getText().equals(other.getText());
     }
 
     @Override
     public int hashCode() {
-        if(myText != null) return myText.hashCode();
+        if(getText() != null) return getText().hashCode();
         return 0;
     }
 }

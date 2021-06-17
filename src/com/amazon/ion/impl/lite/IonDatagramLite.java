@@ -1040,7 +1040,7 @@ final class IonDatagramLite
                     }
                     else {
                         IonSystem sys = __iterator.get_datagram_system();
-                        rep = _Private_Utils.symtabTree(new_symbol_table);
+                        rep = _Private_Utils.symtabTree(new_symbol_table, sys);
                     }
                     assert(rep != null && __iterator.get_datagram_system() == rep.getSystem());
 
@@ -1147,7 +1147,7 @@ final class IonDatagramLite
             int count = 0;
             while (curr.isLocalTable()) {
                 count++;
-                curr = _Private_Utils.symtabTree(curr).getSymbolTable();
+                curr = _Private_Utils.symtabTree(curr, sys).getSymbolTable();
             }
             // we should terminate when the symbol tables symbol table is the system symbol table
             assert(curr != null);

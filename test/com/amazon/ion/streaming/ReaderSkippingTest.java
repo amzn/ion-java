@@ -72,8 +72,8 @@ public class ReaderSkippingTest
     throws Exception
     {
         super.setUp();
-        myFullReader = system().newReader(new FileInputStream(myTestFile));
-        mySkipReader = system().newReader(new FileInputStream(myTestFile));
+        myFullReader = getStreamingMode().newIonReader(system().getCatalog(), new FileInputStream(myTestFile));
+        mySkipReader = getStreamingMode().newIonReader(system().getCatalog(), new FileInputStream(myTestFile));
 
         myRandom = new Random(SEED);
     }

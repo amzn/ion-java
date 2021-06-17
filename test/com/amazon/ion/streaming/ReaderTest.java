@@ -178,6 +178,45 @@ public class ReaderTest
         }
     }
 
+    @Test
+    public void testReadingDecimalAsInteger()
+    {
+        // decimal value <space> int conversion
+        read(
+            "0. 0 " +
+            "-2147483648. -2147483648 " + // Min int
+            "2147483647. 2147483647 " // Max int
+        );
+        while (in.next() != null)
+        {
+            int actual = in.intValue();
+
+            in.next();
+            int expected = in.intValue();
+
+            assertEquals(expected, actual);
+        }
+    }
+
+    @Test
+    public void testReadingDecimalAsLong()
+    {
+        // decimal value <space> int conversion
+        read(
+            "0. 0 " +
+            "2147483647. 2147483647 " + // Max int
+            "9223372036854775807. 9223372036854775807 " // Max long
+        );
+        while (in.next() != null)
+        {
+            long actual = in.longValue();
+
+            in.next();
+            long expected = in.longValue();
+
+            assertEquals(expected, actual);
+        }
+    }
 
     @Test
     public void testReadingDecimalAsBigInteger()
@@ -201,6 +240,71 @@ public class ReaderTest
         }
     }
 
+    @Test
+    public void testReadingDecimalAsDouble()
+    {
+        // decimal value <space> float conversion
+        read(
+            "0. 0e0 " +
+            "1.23 123e-2 " +
+            "-1.23 -1.23e0 " +
+            "2d24 2e24 "
+        );
+
+        while (in.next() != null)
+        {
+            double actual = in.doubleValue();
+
+            in.next();
+            double expected = in.doubleValue();
+
+            assertEquals(expected, actual, 1e-9);
+        }
+    }
+
+    @Test
+    public void testReadingFloatAsInteger()
+    {
+        // float value <space> int conversion
+        read(
+            "-0e0 0 " +
+            " 0e0 0 " +
+            "-2147483648e0 -2147483648 " + // Min int
+            "2147483647e0 2147483647 " // Max int
+        );
+
+        while (in.next() != null)
+        {
+            int actual = in.intValue();
+
+            in.next();
+            int expected = in.intValue();
+
+            assertEquals(expected, actual);
+        }
+    }
+
+    @Test
+    public void testReadingFloatAsLong()
+    {
+        // float value <space> int conversion
+        read(
+            "-0e0 0 " +
+            " 0e0 0 " +
+            "-2147483648e0 -2147483648 " + // Min int
+            "2147483647e0 2147483647 " // Max int
+        );
+
+        while (in.next() != null)
+        {
+            long actual = in.longValue();
+
+            in.next();
+            long expected = in.longValue();
+
+            assertEquals(expected, actual);
+        }
+    }
 
     @Test
     public void testReadingFloatAsBigInteger()

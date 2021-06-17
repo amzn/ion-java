@@ -54,9 +54,8 @@ public class BinaryReaderWrappedValueLengthTest
     public void readInto() throws Exception
     {
         thrown.expect(IonException.class);
-        thrown.expectMessage("Wrapper length mismatch: wrapper 11 wrapped value 9 at position 8");
 
-        final IonReader in = system().newReader(OVERRUN);
+        final IonReader in = getStreamingMode().newIonReader(system().getCatalog(), OVERRUN);
 
         assertEquals(IonType.SYMBOL, in.next());
         assertEquals(asList("name"), asList(in.getTypeAnnotations()));
@@ -65,17 +64,18 @@ public class BinaryReaderWrappedValueLengthTest
         assertEquals(IonType.SYMBOL, in.next());
         assertEquals(emptyList(), asList(in.getTypeAnnotations()));
         assertEquals("name", in.stringValue());
+        in.close();
     }
 
     @Test
     public void readOver() throws Exception
     {
         thrown.expect(IonException.class);
-        thrown.expectMessage("Wrapper length mismatch: wrapper 11 wrapped value 9 at position 8");
 
-        final IonReader in = system().newReader(OVERRUN);
+        final IonReader in = getStreamingMode().newIonReader(system().getCatalog(), OVERRUN);
 
         assertEquals(IonType.SYMBOL, in.next());
         assertEquals(IonType.SYMBOL, in.next());
+        in.close();
     }
 }

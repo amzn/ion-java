@@ -134,6 +134,7 @@ public class RoundTripStreamingTest
 
         tw.writeValues(in);
         tw.close();
+        in.close();
 
         byte[] buf = out.toByteArray(); // this is utf-8
         return buf;
@@ -156,7 +157,7 @@ public class RoundTripStreamingTest
 
         bw.writeValues(in);
         byte[] buf = bw.getBytes(); // this is binary
-
+        in.close();
         return buf;
     }
 
@@ -174,7 +175,7 @@ public class RoundTripStreamingTest
 
         tw.writeValues(in);
         //IonValue v = tw.getContentAsIonValue();
-
+        in.close();
         return dg;
     }
 
@@ -381,8 +382,7 @@ public class RoundTripStreamingTest
     }
 
     IonReader makeIterator(byte [] testBuffer) {
-        IonReader inputIterator = system().newReader(testBuffer);
-        return inputIterator;
+        return getStreamingMode().newIonReader(system().getCatalog(), testBuffer);
     }
 
 

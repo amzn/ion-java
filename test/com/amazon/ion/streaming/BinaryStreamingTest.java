@@ -529,7 +529,7 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
             throw new Exception(e);
         }
 
-        IonReader r = system().newReader(buffer);
+        IonReader r = getStreamingMode().newIonReader(system().getCatalog(), buffer);
         IonType t;
 
         t = r.next();
@@ -539,6 +539,7 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
         for (TestValue tv : testvalues) {
             tv.readAndTestValue(r);
         }
+        r.close();
     }
 
     @Test
@@ -586,6 +587,12 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
 
         wr.writeValues(ir);
         byte[] buffer = wr.getBytes();
+        dumpBuffer(buffer, buffer.length);
+
+        ir = getStreamingMode().newIonReader(system().getCatalog(), buffer);
+        wr = system().newBinaryWriter(u);
+        wr.writeValues(ir);
+        buffer = wr.getBytes();
         dumpBuffer(buffer, buffer.length);
     }
     void dumpBuffer(byte[] buffer, int len)
@@ -638,25 +645,27 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
             throw new Exception(e);
         }
 
-        IonReader ir = system().newReader(buffer);
-        if (ir.hasNext()) {
-            ir.next();
+        IonReader ir = getStreamingMode().newIonReader(system().getCatalog(), buffer);
+        IonType t = ir.next();
+        if (t != null) {
             ir.stepIn();
-            while (ir.hasNext()) {
-                IonType t = ir.next();
+            t = ir.next();
+            while (t != null) {
                 String name = ir.getFieldName();
                 boolean value = ir.booleanValue();
                 assertTrue( value );
                 if (BinaryStreamingTest._debug_flag) {
                     System.out.println(t + " " + name +": " + value);
                 }
+                t = ir.next();
             }
         }
+        ir.close();
     }
 
 
     @Test
-    public void testTwoMagicCookies() {
+    public void testTwoMagicCookies() throws Exception {
         IonBinaryWriter wr = system().newBinaryWriter();
         byte[] buffer = null;
 
@@ -675,7 +684,7 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
         System.arraycopy(buffer, 0, doublebuffer, 0, buffer.length);
         System.arraycopy(buffer, 0, doublebuffer, buffer.length, buffer.length);
 
-        IonReader ir = system().newReader(doublebuffer);
+        IonReader ir = getStreamingMode().newIonReader(system().getCatalog(), doublebuffer);
 
         // first copy
         assertEquals(IonType.STRUCT, ir.next());
@@ -704,11 +713,12 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
         ir.stepOut();
 
         assertEquals(null, ir.next());
+        ir.close();
     }
 
 
     @Test
-    public void testBoolean() {
+    public void testBoolean() throws Exception {
         IonBinaryWriter wr = system().newBinaryWriter();
         byte[] buffer = null;
 
@@ -723,12 +733,13 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
             throw new RuntimeException(e);
         }
 
-        IonReader ir = system().newReader(buffer);
-        if (ir.hasNext()) {
-            ir.next();
+        IonReader ir = getStreamingMode().newIonReader(system().getCatalog(), buffer);
+        IonType t = ir.next();
+        if (t != null) {
             ir.stepIn();
-            while (ir.hasNext()) {
-                assertEquals(ir.next(), IonType.BOOL);
+            t = ir.next();
+            while (t != null) {
+                assertEquals(t, IonType.BOOL);
                 expectField(ir, "Foo");
                 //assertEquals(ir.getAnnotations(), new String[] { "boolean" });
                 String[] annotations = ir.getTypeAnnotations();
@@ -737,14 +748,16 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
                     assertTrue("boolean".equals(annotations[0]));
                 }
                 assertEquals(ir.booleanValue(), true);
+                t = ir.next();
             }
         }
+        ir.close();
     }
 
     //Test Sample map.
     //{hello=true, Almost Done.=true, This is a test String.=true, 12242.124598129=12242.124598129, Something=null, false=false, true=true, long=9326, 12=-12}
     @Test
-    public void testSampleMap() {
+    public void testSampleMap() throws Exception {
         IonBinaryWriter wr = system().newBinaryWriter();
         byte[] buffer = null;
 
@@ -785,7 +798,7 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
             throw new RuntimeException(e);
         }
 
-        IonReader ir = system().newReader(buffer);
+        IonReader ir = getStreamingMode().newIonReader(system().getCatalog(), buffer);
         if (ir.next() != null) {
             ir.stepIn();
             while (ir.next() != null) {
@@ -829,6 +842,7 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
                 assertEquals(ir.intValue(), -12);
             }
         }
+        ir.close();
     }
 
     @Test
@@ -871,7 +885,7 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
 
         bytes = wr.getBytes();
 
-        IonReader ir = system().newReader(bytes);
+        IonReader ir = getStreamingMode().newIonReader(system().getCatalog(), bytes);
         assertEquals(IonType.STRUCT, ir.next());
         ir.stepIn();
 
@@ -915,5 +929,7 @@ new TestValue("Null.timestamp",IonType.NULL, IonType.TIMESTAMP),
         ir.stepOut();
         if (! _Private_Utils.READER_HASNEXT_REMOVED) assertFalse(ir.hasNext());
         assertEquals(null, ir.next());
+
+        ir.close();
     }
 }

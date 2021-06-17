@@ -68,7 +68,7 @@ public final class _Private_Utils
     /**
      * Marker for code points relevant to removal of IonReader.hasNext().
      */
-    public static final boolean READER_HASNEXT_REMOVED = false;
+    public static final boolean READER_HASNEXT_REMOVED = true;
 
 
     /** Just a zero-length byte array, used to avoid allocation. */
@@ -871,9 +871,16 @@ public final class _Private_Utils
      * Trampoline to
      * {@link LocalSymbolTableAsStruct#getIonRepresentation()};
      */
-    public static IonStruct symtabTree(SymbolTable symtab)
+    public static IonStruct symtabTree(SymbolTable symtab, ValueFactory valueFactory)
     {
-        return ((LocalSymbolTableAsStruct)symtab).getIonRepresentation();
+        LocalSymbolTableAsStruct localSymbolTableAsStruct;
+        if (symtab instanceof  LocalSymbolTableAsStruct) {
+            localSymbolTableAsStruct = (LocalSymbolTableAsStruct) symtab;
+        } else {
+            localSymbolTableAsStruct = (LocalSymbolTableAsStruct) new LocalSymbolTableAsStruct.Factory(valueFactory)
+                    .newLocalSymtab(symtab.getSystemSymbolTable(), symtab.getImportedTables());
+        }
+        return localSymbolTableAsStruct.getIonRepresentation();
     }
 
     /**

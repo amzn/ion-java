@@ -16,16 +16,27 @@
 package com.amazon.ion.system;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import com.amazon.ion.IonBufferConfiguration;
 import com.amazon.ion.IonCatalog;
+import com.amazon.ion.IonException;
 import com.amazon.ion.IonReader;
 import com.amazon.ion.IonType;
 import com.amazon.ion.IonWriter;
 import com.amazon.ion.impl._Private_IonBinaryWriterBuilder;
+
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.zip.GZIPOutputStream;
+
+import com.amazon.ion.impl._Private_IonConstants;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -109,6 +120,75 @@ public class IonReaderBuilderTest
         IonReader reader = IonReaderBuilder.standard().build(out.toByteArray());
         assertEquals(IonType.INT, reader.next());
         assertEquals(42, reader.intValue());
+    }
+
+    @Test
+    public void testEnableIncrementalReading() throws IOException
+    {
+        IonReaderBuilder builder = IonReaderBuilder.standard();
+        assertFalse(builder.isIncrementalReadingEnabled());
+        builder.withIncrementalReadingEnabled(true);
+        assertTrue(builder.isIncrementalReadingEnabled());
+        builder.setIncrementalReadingDisabled();
+        assertFalse(builder.isIncrementalReadingEnabled());
+        builder.setIncrementalReadingEnabled();
+        assertTrue(builder.isIncrementalReadingEnabled());
+        builder.withIncrementalReadingEnabled(false);
+        assertFalse(builder.isIncrementalReadingEnabled());
+        ByteArrayOutputStream data = new ByteArrayOutputStream();
+        data.write(_Private_IonConstants.BINARY_VERSION_MARKER_1_0);
+        data.write(0xE5); // 5-byte annotation wrapper (incomplete).
+        IonReader reader1 = builder.build(data.toByteArray());
+        try {
+            reader1.next();
+            fail();
+        } catch (IonException e) {
+            // Expected; this is a non-incremental reader, but a complete value was not available.
+        }
+        builder.withIncrementalReadingEnabled(true);
+        IonReader reader2 = builder.build(data.toByteArray());
+        assertNull(reader2.next());
+        IonReader reader3 = builder.build(new ByteArrayInputStream(data.toByteArray()));
+        assertNull(reader3.next());
+    }
+
+    @Test
+    public void testBufferConfiguration()
+    {
+        IonBufferConfiguration configuration1 = IonBufferConfiguration.Builder.standard().build();
+        IonBufferConfiguration configuration2 = IonBufferConfiguration.Builder.standard().build();
+        IonReaderBuilder builder = IonReaderBuilder.standard();
+        assertNull(builder.getBufferConfiguration());
+        builder.withBufferConfiguration(configuration1);
+        assertSame(configuration1, builder.getBufferConfiguration());
+        builder.setBufferConfiguration(configuration2);
+        assertSame(configuration2, builder.getBufferConfiguration());
+        builder.withBufferConfiguration(null);
+        assertNull(builder.getBufferConfiguration());
+    }
+
+    @Test
+    public void testIncrementalReadingDoesNotSupportAutoGzip() throws IOException
+    {
+        IonReaderBuilder builder = IonReaderBuilder.standard();
+        builder.withIncrementalReadingEnabled(true);
+        ByteArrayOutputStream data = new ByteArrayOutputStream();
+        GZIPOutputStream gzip = new GZIPOutputStream(data);
+        gzip.write(_Private_IonConstants.BINARY_VERSION_MARKER_1_0);
+        gzip.write(0x20); // int 0.
+        gzip.close();
+        try {
+            builder.build(data.toByteArray());
+            fail();
+        } catch (IllegalArgumentException e) {
+            // Expected; non-incremental readers do not support auto-deflate of GZIP.
+        }
+        try {
+            builder.build(new ByteArrayInputStream(data.toByteArray()));
+            fail();
+        } catch (IllegalArgumentException e) {
+            // Expected; non-incremental readers do not support auto-deflate of GZIP.
+        }
     }
 
 }

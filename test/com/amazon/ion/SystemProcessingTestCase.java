@@ -325,7 +325,7 @@ public abstract class SystemProcessingTestCase
 
         nextValue();
         checkSymbol("foo");
-        assertSame(table2, currentSymtab());
+        assertEquals(table2.getMaxId(), currentSymtab().getMaxId());
     }
 
     @Test
@@ -346,14 +346,26 @@ public abstract class SystemProcessingTestCase
         checkInt(1);
 
         SymbolTable table1 = currentSymtab();
-        checkLocalTable(table1);
+        // Note: there's no need to require implementations to actually create an LST in this case. It's fine to
+        // treat it as a reset to the system symbol table.
+        assertFalse("table is substitute", table1.isSubstitute());
+        checkUnknownSymbol(" not defined ", UNKNOWN_SYMBOL_ID, table1);
+
+        SymbolTable system = table1.getSystemSymbolTable();
+        checkSystemTable(system);
+        assertEquals(system.getIonVersionId(), table1.getIonVersionId());
+        assertEquals(systemMaxId(), table1.getMaxId());
 
         nextValue();
         checkInt(2);
 
         SymbolTable table2 = currentSymtab();
-        checkLocalTable(table2);
-        assertNotSame(table1, table2);
+        assertFalse("table is substitute", table2.isSubstitute());
+        checkUnknownSymbol(" not defined ", UNKNOWN_SYMBOL_ID, table2);
+
+        system = table2.getSystemSymbolTable();
+        checkSystemTable(system);
+        assertEquals(system.getIonVersionId(), table2.getIonVersionId());
         assertEquals(systemMaxId(), table2.getMaxId());
     }
 
@@ -1130,6 +1142,10 @@ public abstract class SystemProcessingTestCase
         checkEof();
     }
 
+    protected int expectedLocalNullSlotSymbolId() {
+        return 10;
+    }
+
     protected void checkLocalSymtabWithMalformedSymbolEntry(String symbolValue)
         throws Exception
     {
@@ -1141,7 +1157,7 @@ public abstract class SystemProcessingTestCase
         startIteration(text);
 
         nextValue();
-        checkSymbol(null, 10);
+        checkSymbol(null, expectedLocalNullSlotSymbolId());
 
         checkEof();
     }

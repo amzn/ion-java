@@ -17,7 +17,10 @@ package com.amazon.ion;
 
 import static com.amazon.ion.SystemSymbols.ION_SYMBOL_TABLE_SID;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Iterator;
+
 import org.junit.Test;
 
 public class BinaryTest extends IonTestCase
@@ -74,7 +77,25 @@ public class BinaryTest extends IonTestCase
      */
     private IonValue ion(final String hex)
     {
-        return system().singleValue(hexToBytes(MAGIC_COOKIE + hex));
+        byte[] data = hexToBytes(MAGIC_COOKIE + hex);
+        if (getStreamingMode() == StreamingMode.NEW_STREAMING_INCREMENTAL) {
+            IonReader reader = getStreamingMode().newIonReader(system().getCatalog(), data);
+            Iterator<IonValue> iterator = system().iterate(reader);
+            IonValue value = null;
+            if (iterator.hasNext()) {
+                value = iterator.next();
+            }
+            if (iterator.hasNext()) {
+                throw new IonException("not a single value");
+            }
+            try {
+                reader.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return value;
+        }
+        return system().singleValue(data);
     }
 
     /** Converts a single value to bytes using an empty datagram */

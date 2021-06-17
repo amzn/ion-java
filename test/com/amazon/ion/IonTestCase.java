@@ -22,9 +22,11 @@ import com.amazon.ion.impl._Private_IonSystem;
 import com.amazon.ion.junit.Injected;
 import com.amazon.ion.junit.Injected.Inject;
 import com.amazon.ion.junit.IonAssert;
+import com.amazon.ion.system.IonReaderBuilder;
 import com.amazon.ion.system.IonSystemBuilder;
 import com.amazon.ion.system.SimpleCatalog;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,13 +60,39 @@ public abstract class IonTestCase
         }
     }
 
-    protected enum StreamingMode { OLD_STREAMING, NEW_STREAMING }
+    protected enum StreamingMode {
+        NEW_STREAMING() {
+            @Override
+            public IonReader newIonReader(IonCatalog catalog, InputStream inputStream) {
+                return IonReaderBuilder.standard().withCatalog(catalog).build(inputStream);
+            }
+
+            @Override
+            public IonReader newIonReader(IonCatalog catalog, byte[] data) {
+                return IonReaderBuilder.standard().withCatalog(catalog).build(data);
+            }
+        },
+        NEW_STREAMING_INCREMENTAL() {
+            @Override
+            public IonReader newIonReader(IonCatalog catalog, InputStream inputStream) {
+                return IonReaderBuilder.standard().withCatalog(catalog).withIncrementalReadingEnabled(true).build(inputStream);
+            }
+
+            @Override
+            public IonReader newIonReader(IonCatalog catalog, byte[] data) {
+                return IonReaderBuilder.standard().withCatalog(catalog).withIncrementalReadingEnabled(true).build(data);
+            }
+        };
+
+        public abstract IonReader newIonReader(IonCatalog catalog, InputStream inputStream);
+        public abstract IonReader newIonReader(IonCatalog catalog, byte[] data);
+    }
 
     // Using an enum makes the test names more understandable than a boolean.
     protected enum StreamCopySpeed { COPY_OPTIMIZED, COPY_NON_OPTIMIZED }
 
     @Inject("streamingMode")
-    public static final StreamingMode[] STREAMING_DIMENSION = { StreamingMode.NEW_STREAMING };
+    public static final StreamingMode[] STREAMING_DIMENSION = StreamingMode.values();
 
     /**
      * Flag on whether IonSystems generated is
@@ -231,7 +259,14 @@ public abstract class IonTestCase
         throws IonException, IOException
     {
         IonLoader loader = loader();
-        IonDatagram dg = loader.load(ionFile);
+        IonDatagram dg;
+        if (ionFile.getName().endsWith(".ion")) {
+            dg = loader.load(ionFile);
+        } else {
+            IonReader reader = myStreamingMode.newIonReader(system().getCatalog(), new FileInputStream(ionFile));
+            dg = loader.load(reader);
+            reader.close();
+        }
 
         // Flush out any encoding problems in the data.
         forceDeepMaterialization(dg);
@@ -739,7 +774,12 @@ public abstract class IonTestCase
     public static void checkSymbol(String text, int sid, SymbolToken sym)
     {
         assertEquals("SymbolToken.text", text, sym.getText());
-        assertEquals("SymbolToken.id",   sid,  sym.getSid());
+        if (text == null) {
+            // Local symbols with unknown text may be treated equivalently to symbol zero.
+            assertTrue("SymbolToken.id", sid == sym.getSid() || 0 == sym.getSid());
+        } else {
+            assertEquals("SymbolToken.id", sid, sym.getSid());
+        }
 
         if (text != null)
         {
@@ -789,7 +829,7 @@ public abstract class IonTestCase
 
         assertFalse(value.isNullValue());
 
-        if (name == null)
+        if (name == null && id != 0)
         {
             try {
                 sym.stringValue();
@@ -802,6 +842,7 @@ public abstract class IonTestCase
         }
         else
         {
+            // Note: symbol zero follows this path because it causes stringValue() to return null rather than throw.
             assertEquals("symbol name", name, sym.stringValue());
         }
 

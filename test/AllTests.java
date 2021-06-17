@@ -49,6 +49,9 @@ import com.amazon.ion.NopPaddingTest;
 import com.amazon.ion.NullTest;
 import com.amazon.ion.RawValueSpanReaderBasicTest;
 import com.amazon.ion.impl.IonReaderBinaryRawLargeStreamTest;
+import com.amazon.ion.impl.IonReaderLookaheadBufferTest;
+import com.amazon.ion.impl.ResizingPipedInputStreamTest;
+import com.amazon.ion.impl.IonReaderBinaryIncrementalTest;
 import com.amazon.ion.impl.RawValueSpanReaderTest;
 import com.amazon.ion.RoundTripTest;
 import com.amazon.ion.SexpTest;
@@ -208,6 +211,11 @@ import org.junit.runners.Suite;
     BinaryReaderWrappedValueLengthTest.class,
     IonReaderBuilderTest.class,
     IonReaderBinaryRawLargeStreamTest.class,
+
+    // non-blocking binary reader tests
+    IonReaderBinaryIncrementalTest.class,
+    ResizingPipedInputStreamTest.class,
+    IonReaderLookaheadBufferTest.class,
 
     // experimental binary writer tests
     PooledBlockAllocatorProviderTest.class,
